@@ -1,0 +1,305 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon/favicon.ico') }}">
+
+    <title>{% block title %}HPC web{% endblock %}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dist/styles.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+    <script> window.JOB_DETAIL_URL_TEMPLATE = "{{ url_for('slurm.job_details_page', job_id=0) }}";  </script>
+    <script defer src="{{ url_for('static', filename='js/notif.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/common.js') }}"></script>
+    <script defer src="{{ url_for('static', filename='js/job_details.js') }}"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+   
+    <script>
+        if (localStorage.getItem('theme') === 'dark' ||
+           (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+
+        function toggleDarkMode() {
+            const html = document.documentElement;
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body class="bg-gray-100 dark:bg-gray-900 transition-colors duration-300">
+  <div class="flex h-screen antialiased text-gray-900 dark:text-gray-100">
+
+    <div class="hidden md:flex flex-col  w-64 bg-blue-900 shadow-xl dark:bg-gray-800">
+        <div class="flex flex-col flex-1 overflow-y-auto">
+            <nav class="flex flex-col flex-1 px-4 py-6 space-y-2">
+                <div class="text-2xl font-extrabold p-2 mb-4 text-white">HPC.web</div>
+
+                {% set current_endpoint = request.endpoint %}
+
+                <a href="{{ url_for('slurm.dashboard') }}"
+                   class="flex items-center px-4 py-2 text-gray-200 rounded-lg hover:bg-blue-700 dark:hover:bg-gray-700
+                          {% if 'dashboard' in current_endpoint %}bg-blue-700 dark:bg-blue-700 font-semibold shadow-md{% endif %}">
+		    	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+  				<path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+		    	</svg>
+                    	Dashboard
+                </a>
+
+                <a href="{{ url_for('slurm.submit') }}"
+                   class="flex items-center px-4 py-2 text-gray-200 rounded-lg hover:bg-blue-700 dark:hover:bg-gray-700
+                          {% if 'slurm' == current_endpoint %}bg-blue-700 dark:bg-blue-700 font-semibold shadow-md{% endif %}">
+		    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+  			<path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+  			<path stroke-linecap="round" stroke-linejoin="round" d="M15.91 11.672a.375.375 0 0 1 0 .656l-5.603 3.113a.375.375 0 0 1-.557-.328V8.887c0-.286.307-.466.557-.327l5.603 3.112Z" />
+		   </svg>
+                    Submit
+                </a>
+
+                <a href="{{ url_for('slurm.jobs') }}"
+                   class="flex items-center px-4 py-2 text-gray-200 rounded-lg hover:bg-blue-700 dark:hover:bg-gray-700
+                          {% if 'jobs' in current_endpoint %}bg-blue-700 dark:bg-blue-700 font-semibold shadow-md{% endif %}">
+                    	<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                        	<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m.5-13H11v6l5.25 3.15l.75-1.23l-4.5-2.62V7z" />
+                    	</svg>
+                    	Jobs
+                </a>
+
+                <a href="{{ url_for('slurm.resources')}}"
+                   class="flex items-center px-4 py-2 text-gray-200 rounded-lg hover:bg-blue-700 dark:hover:bg-gray-700
+                          {% if 'resources' in current_endpoint %}bg-blue-700 dark:bg-blue-700 font-semibold shadow-md{% endif %}">
+		    	<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+  		    		<path stroke-linecap="round" stroke-linejoin="round" d="M8.25 3v1.5M4.5 8.25H3m18 0h-1.5M4.5 12H3m18 0h-1.5m-15 3.75H3m18 0h-1.5M8.25 19.5V21M12 3v1.5m0 15V21m3.75-18v1.5m0 15V21m-9-1.5h10.5a2.25 2.25 0 0 0 2.25-2.25V6.75a2.25 2.25 0 0 0-2.25-2.25H6.75A2.25 2.25 0 0 0 4.5 6.75v10.5a2.25 2.25 0 0 0 2.25 2.25Zm.75-12h9v9h-9v-9Z" />
+		    	</svg>
+                    	Resources
+                </a>
+
+            </nav> 
+        </div>
+    </div>
+
+
+    <div class="flex flex-col flex-1 overflow-y-auto">
+
+        <header class="flex items-center justify-end h-16 bg-white shadow-md border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
+            <div class="flex items-center space-x-4 mr-4">
+
+                <button onclick="toggleDarkMode()"
+                    class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 p-2 rounded-full transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+      <div x-data="notificationsComponent()" @click.away="open = false" class="relative">
+	<button @click="toggleMenu()"
+            type="button"
+            class="relative p-2 rounded-full text-gray-600 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-600 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+            :aria-expanded="open.toString()">
+
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9m-4 13h-4v-2h4z" />
+        </svg>
+
+        <span x-show="count > 0"
+              x-transition
+              class="absolute top-0 right-0 h-5 w-5 rounded-full bg-red-600 border-2 border-white dark:border-gray-800 flex items-center justify-center text-xs font-bold text-white">
+            <span x-text="count > 99 ? '99+' : count"></span>
+        </span>
+    </button>
+
+    <div x-show="open"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="transform opacity-0 scale-95"
+         x-transition:enter-end="transform opacity-100 scale-100"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="transform opacity-100 scale-100"
+         x-transition:leave-end="transform opacity-0 scale-95"
+         class="absolute right-0 mt-3 w-96 origin-top-right rounded-lg shadow-xl bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none z-50">
+
+        <!-- Header -->
+        <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+            <p class="text-lg font-bold text-gray-900 dark:text-white">Notifications</p>
+            <div class="flex space-x-2">
+                <button @click="markAllAsRead()"
+                        class="text-xs text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                    Mark all read
+                </button>
+                <button @click="clearAll()"
+                        class="text-xs text-red-600 hover:text-red-800 dark:text-red-400">
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        <div x-show="notifications.length > 0"
+             class="divide-y divide-gray-200 dark:divide-gray-700 max-h-96 overflow-y-auto">
+            <template x-for="item in notifications" :key="item.id">
+                <div class="p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition"
+                     :class="{
+                         'bg-red-50 dark:bg-red-900/20': item.type === 'FAILED',
+                         'bg-orange-50 dark:bg-orange-900/20': item.type === 'TIMEOUT' || item.type === 'CANCELLED',
+                         'bg-green-50 dark:bg-green-900/20': item.type === 'COMPLETED',
+                         'opacity-60': item.read
+                     }">
+
+                    <!-- Icon + Content -->
+                    <div class="flex items-start space-x-3">
+                        <div class="flex-shrink-0 mt-0.5">
+			    <span x-show="item.type === 'FAILED'" class="text-red-500">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 7.5a.75.75 0 0 0-1.5 0v3c0 .414.336.75.75.75s.75-.336.75-.75v-3ZM12 16a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
+			    </span>
+			    <span x-show="item.type === 'TIMEOUT'" class="text-orange-500">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 6a.75.75 0 0 0-1.5 0v5.25c0 .414.336.75.75.75h4.5a.75.75 0 0 0 0-1.5h-3.75V6Z" clip-rule="evenodd" /></svg>
+			    </span>
+			    <span x-show="item.type === 'CANCELLED'" class="text-red-500 bg-red-600:text-red-400">
+				<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12ZM7.5 12a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd" /></svg>
+			    </span>
+			    <span x-show="item.type === 'COMPLETED'" class="text-green-500">
+			    	<svg data-slot="icon" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" class="h-6 w-6">
+			      	<path clip-rule="evenodd" fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z"></path>
+			    </svg>
+			    </span>
+			</div>
+                        <!-- Content -->
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 dark:text-white truncate"
+                               x-text="item.title"></p>
+                            <p class="text-xs text-gray-600 dark:text-gray-400 mt-1"
+                               x-text="item.message"></p>
+
+                            <!-- Actions -->
+                            <div class="mt-2 flex items-center space-x-3">
+                                <button x-show="item.job_id"
+                                        @click="viewJobLogs(item.job_id); open = false;"
+                                        class="text-xs font-medium text-blue-600 hover:text-blue-800 dark:text-blue-400">
+                                    View Job →
+                                </button>
+                                <span class="text-xs text-gray-500"
+                                      x-text="new Date(item.timestamp).toLocaleTimeString()"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </template>
+        </div>
+
+        <!-- Empty State -->
+        <div x-show="notifications.length === 0"
+             class="p-8 text-center text-gray-500 dark:text-gray-400">
+            <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            </svg>
+            <p class="mt-2">No notifications</p>
+        </div>
+    </div>
+ </div>
+		{% if current_user.is_authenticated %}
+		<div class="relative ml-4 md:ml-6" x-data="{ open: false }" @click.away="open = false">
+
+		    <button @click="open = !open"
+			    type="button"
+			    class="flex items-center justify-center h-10 w-10 rounded-full bg-blue-600 text-white font-semibold text-lg hover:bg-blue-700 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+			    aria-expanded="false"
+			    :aria-expanded="open.toString()">
+			<span>{{ current_user.username[0]|upper }}</span>
+		    </button>
+
+		    <div x-show="open"
+			 x-transition:enter="transition ease-out duration-150"
+			 x-transition:enter-start="transform opacity-0 scale-95"
+			 x-transition:enter-end="transform opacity-100 scale-100"
+			 x-transition:leave="transition ease-in duration-100"
+			 x-transition:leave-start="transform opacity-100 scale-100"
+			 x-transition:leave-end="transform opacity-0 scale-95"
+			 class="absolute right-0 mt-3 w-56 origin-top-right rounded-md shadow-lg bg-white dark:bg-gray-700 ring-1 ring-black ring-opacity-5 focus:outline-none"
+			 role="menu"
+			 aria-orientation="vertical"
+			 aria-labelledby="user-menu-button"
+			 style="display: none;">
+
+			<div class="px-4 py-3 border-b border-gray-100 dark:border-gray-600">
+			    <!--<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ current_user.username }}</p>
+			    <p class="text-xs text-gray-500 dark:text-gray-400">User</p>-->
+			    <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ current_user.cn }}</p>
+                	    <p class="text-xs text-gray-500 dark:text-gray-400">@{{ current_user.username }}</p>
+			</div>
+
+			<div class="py-1" role="none">
+
+				<a href="{{ url_for('slurm.account') }}"
+                  		 class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600" role="menuitem">
+                    		<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+                        		<path stroke-linecap="round" stroke-linejoin="round" d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a7.51 7.51 0 0 1-4.965-2.934m-6.786 1.761a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5ZM12 4.5a7.5 7.5 0 0 0-7.5 7.5M12 4.5a7.5 7.5 0 0 1 7.5 7.5M12 4.5a7.5 7.5 0 0 0-7.5 7.5m-15 0a7.5 7.5 0 0 0 7.5 7.5m-15 0a7.5 7.5 0 0 1 7.5 7.5m7.5-7.5a7.5 7.5 0 0 0-7.5-7.5m7.5 7.5a7.5 7.5 0 0 1-7.5 7.5" />
+                    		</svg>
+                    		Account
+                		</a>
+                                                    
+				<a href="{{ url_for('slurm.settings') }}"
+				class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600" role="menuitem">
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+					<path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+					<path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+				</svg>
+				Settings
+				</a>    
+
+			</div>
+
+			<div class="py-1" role="none">
+    <a href="{{ url_for('files.file_explorer') }}"
+       class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600" role="menuitem">
+        <svg class="h-5 w-5 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12.75l1.5 1.5M12 21.75l-1.5-1.5m1.5-1.5l1.5 1.5M21.75 12.75l-1.5-1.5m-1.5 1.5l-1.5-1.5M12 2.25l-1.5 1.5m1.5 1.5l1.5-1.5m-1.5 1.5l-1.5-1.5M12 21.75h-3.75a3.75 3.75 0 0 1-3.75-3.75V12a3.75 3.75 0 0 1 3.75-3.75H12m0 15h3.75a3.75 3.75 0 0 0 3.75-3.75V12a3.75 3.75 0 0 0-3.75-3.75H12m-7.5 7.5v-7.5m7.5 7.5v-7.5M12 12V6.75a4.5 4.5 0 0 1 9 0V12m-4.5 4.5a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" />
+        </svg>
+        File Browser
+    </a>
+    </div>
+
+			<div class="py-1" role="none">
+			    <a href="{{ url_for('auth.logout')}}"
+			       class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-900 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+			       role="menuitem">
+				<!--<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+				    <path d="M16 9v-4l8 7l-8 7v-4h-8v-6h8zM14 18h-2v-2h2v2zM12 6v-2h-2v2h2zM18 6h-2v2h2v-2zM18 16h-2v2h2v-2zM10 20h2v2h-2v-2zM6 20h2v2h-2v-2zM6 4h2v2h-2v-2zM10 4h2v2h-2v-2zM2 14h2v2h-2v-2zM2 8h2v2h-2v-2zM2 12h2v2h-2v-2z" />
+				</svg>-->
+				<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-3">
+  					<path stroke-linecap="round" stroke-linejoin="round" d="M5.636 5.636a9 9 0 1 0 12.728 0M12 3v9" />
+				</svg>
+				Sign out
+			    </a>
+			</div>
+		    </div>
+		</div>
+		{% endif %}
+	    </div>
+        </header>
+
+        <main class="flex-1 overflow-x-hidden overflow-y-auto p-6">
+            <div class="container mx-auto">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </main>
+    </div>
+
+</div>
+
+
+{% block page_scripts %} 
+{% endblock %}
+
+</body>
+</html>

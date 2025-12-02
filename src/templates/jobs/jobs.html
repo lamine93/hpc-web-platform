@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Jobs{% endblock %}
+
+{% block content %}
+
+<div id="contextMenu" class="absolute hidden z-50 bg-white dark:bg-gray-700 rounded-lg shadow-xl py-1 border border-gray-200 dark:border-gray-600">
+    <button id="cancelJob" onclick="cancel()" 
+            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-red-400 font-semibold transition">
+        <span class="mr-2"></span> KILL
+    </button>
+    <button id="viewJob" onclick="view()" 
+            class="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-blue-400 transition">
+        <span class="mr-2"></span> VIEW
+    </button>
+    <button id="requeueJob" 
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 transition">
+        <span class="mr-2"></span> REQUEUE
+    </button>
+    <button id="suspendJob" 
+            class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 dark:text-gray-200 transition">
+        <span class="mr-2"></span> SUSPEND
+    </button>
+</div>
+  
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 transition-colors">
+
+    <div class="flex flex-wrap items-center space-y-4 sm:space-y-0 sm:space-x-6 mb-6 pb-4 border-b border-gray-200 dark:border-gray-700">
+
+
+	<div class="job-controls-header space-y-4">
+	    <div class="flex justify-between items-center">
+		<button id="addFiltersBtn" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition duration-150">
+		    + Add filters
+		</button>
+		</div>
+
+	    <div id="activeFiltersContainer" class="flex flex-wrap items-center space-x-2 space-y-2">
+		<span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+		    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-1 align-sub" viewBox="0 0 20 20" fill="currentColor">
+		     <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+		    </svg>
+		</span>
+		</div>
+	</div>
+
+	<hr class="mt-4 border-gray-200 dark:border-gray-700">
+
+	<div id="filterModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50">
+	    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-96">
+		<h3 class="text-lg font-bold mb-4 text-gray-900 dark:text-gray-100">Add New Filter</h3>
+		
+		<label for="filterType" class="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Category:</label>
+		<select id="filterType" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 dark:text-white mb-4">
+		    <option value="">-- Select Category --</option>
+		    <option value="state">State</option>
+		    <option value="partition">Partition</option>
+		    <option value="qos">QOS</option>
+		</select>
+
+		<div id="filterValueContainer" class="mb-4">
+		    <p class="text-sm text-gray-500">Select a category first.</p>
+		</div>
+
+		<div class="flex justify-end pt-2">
+		    <button id="cancelFilterBtn" class="bg-gray-300 dark:bg-gray-700 dark:text-gray-300 px-4 py-2 rounded-lg text-sm mr-2">Cancel</button>
+		    <button id="applyFilterBtn" disabled class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm disabled:opacity-50 disabled:cursor-not-allowed">Apply</button>
+		</div>
+	    </div>
+	</div>
+		       
+    </div>
+    
+    <div class="-mx-6 overflow-x-auto">
+        <div class="inline-block min-w-full align-middle">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                    <tr>
+                        {% set head_classes = "px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400" %}
+                        
+                        <th scope="col" class="{{ head_classes }} sm:pl-6 lg:pl-8">#ID</th>
+                        <th scope="col" class="{{ head_classes }}">JobName</th>
+                        <th scope="col" class="{{ head_classes }}">State</th>
+                        <th scope="col" class="{{ head_classes }}">User (account)</th>
+                        <th scope="col" class="{{ head_classes }}">Partition</th>
+                        <th scope="col" class="{{ head_classes }}">QOS</th>
+                        <th scope="col" class="{{ head_classes }}">Reason</th>
+                        <th scope="col" class="{{ head_classes }}">Elapsed</th>
+                        <th scope="col" class="{{ head_classes }}">Start</th>
+                        <th scope="col" class="{{ head_classes }}">End</th>
+                    </tr>
+                </thead>
+                <tbody id="jobs" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="outputModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 z-50 flex justify-center items-center" style="display:none;">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-11/12 md:w-3/4 max-h-[90vh] overflow-y-auto relative">
+        <button type="button" class="close absolute top-3 right-3 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-2xl" onclick="document.getElementById('outputModal').style.display='none'">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 border-b pb-2">Job Output</h2>
+        <pre id="outputContent" class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-sm text-gray-700 dark:text-gray-300 overflow-x-auto font-mono whitespace-pre-wrap"></pre>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+    <script>
+    	AVAILABLE_PARTITIONS = {{ available_partitions | tojson }};
+    	AVAILABLE_QOS = {{ available_qos | tojson }};
+	    const jobDetailUrlTemplate = "{{ url_for('slurm.job_details_page', job_id=0) }}";
+   </script>
+   <script defer src="{{ url_for('static', filename='js/jobs.js') }}"></script>
+{% endblock %}

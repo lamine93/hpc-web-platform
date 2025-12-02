@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+
+<div id="metrics-error" class="text-red-500 font-semibold mb-4"></div> 
+
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+    <div class="bg-white p-6 rounded-xl shadow-lg border-b-4 border-blue-600 dark:bg-gray-800 transition-shadow">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Nodes</p>
+        <span id="nodes" class="text-4xl font-extrabold tracking-tight text-blue-800 dark:text-blue-400 mt-1">
+            0 
+        </span>
+    </div>
+    
+    <div class="bg-white p-6 rounded-xl shadow-lg border-b-4 border-teal-500 dark:bg-gray-800 transition-shadow">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Cores</p>
+        <span id="cores" class="text-4xl font-extrabold tracking-tight text-teal-600 dark:text-teal-400 mt-1">
+            0
+        </span>
+    </div>
+    
+    <div class="bg-white p-6 rounded-xl shadow-lg border-b-4 border-orange-500 dark:bg-gray-800 transition-shadow">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Running jobs</p>
+        <span id="running_jobs" class="text-4xl font-extrabold tracking-tight text-orange-600 dark:text-orange-400 mt-1">
+            0
+        </span>
+    </div>
+
+    <div class="bg-white p-6 rounded-xl shadow-lg border-b-4 border-gray-400 dark:bg-gray-800 transition-shadow">
+        <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Total jobs</p>
+        <span id="total_jobs" class="text-4xl font-extrabold tracking-tight text-gray-700 dark:text-gray-300 mt-1">
+            0
+        </span>
+    </div>
+</div>
+
+<hr class="my-6 border-gray-300 dark:border-gray-700">
+
+<div class="flex justify-end">
+    <div class="mb-6 bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 transition-shadow">
+        <label for="timeRange" class="text-sm font-medium text-gray-700 dark:text-gray-300 mr-4">Historical Range:</label>
+        <select id="timeRange" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500">
+            <option value="30m">Last 30 minutes</option>
+            <option value="1h" selected>Last 1 hour</option>
+            <option value="3h">Last 3 hours</option>
+            <option value="6h">Last 6 hours</option>
+            <option value="12h">Last 12 hours</option>
+            <option value="1d">Last 1 day</option>
+            <option value="7d">Last 7 days</option>
+            <option value="30d">Last 30 days</option>
+        </select>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    
+    <div class="bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 transition-shadow">
+        <h3 class="text-lg font-semibold mb-2 dark:text-gray-200">Job Status (Running vs. Pending)</h3>
+        <div style="height: 300px;"><canvas id="jobStatusChart"></canvas></div>
+    </div>
+    
+    <div class="bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 transition-shadow">
+        <h3 class="text-lg font-semibold mb-2 dark:text-gray-200">Node Status (Allocated vs. Idle)</h3>
+        <div style="height: 300px;"><canvas id="nodeStatusChart"></canvas></div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 transition-shadow">
+        <h3 class="text-lg font-semibold mb-2 dark:text-gray-200">Error/Cancellation Status</h3>
+        <div style="height: 300px;"><canvas id="jobFailureChart"></canvas></div>
+    </div>
+
+    <div class="bg-white p-4 rounded-xl shadow-lg dark:bg-gray-800 transition-shadow">
+        <h3 class="text-lg font-semibold mb-2 dark:text-gray-200">Error/Maintenance Nodes</h3>
+        <div style="height: 300px;"><canvas id="nodeDownChart"></canvas></div>
+    </div>
+</div>
+
+
+{% endblock %}
+
+{% block page_scripts %}
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <script defer src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

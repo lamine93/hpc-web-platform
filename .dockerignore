@@ -1,0 +1,48 @@
+# Dossiers de cache Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+src/__pycache__/
+
+resources/
+
+# Dossiers et fichiers virtuels
+.env
+venv/
+.venv/
+env/
+ENV/
+
+# Git
+.git
+.gitignore
+
+# Logs et temporaires
+*.log
+*.tmp
+*.swp
+*.bak
+*.sqlite
+*.db
+
+# Node / front-end (si jamais tu compiles du JS ou Tailwind)
+node_modules/
+dist/
+build/
+
+# Configs locales
+*.local
+*.DS_Store
+.idea/
+.vscode/
+
+# Fichiers de test ou notebooks
+*.ipynb
+tests/
+notebooks/
+
+# fichiers sensibles internes
+src/password.txt
+

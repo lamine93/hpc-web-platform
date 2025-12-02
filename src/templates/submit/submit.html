@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Submit{% endblock %}
+
+{% block content %}
+
+<div class="max-w-4xl mx-auto p-8 bg-white dark:bg-gray-800 rounded-xl shadow-2xl dark:shadow-xl transition-colors">
+    <h2 class="text-2xl font-extrabold mb-8 text-gray-800 dark:text-gray-100 border-b pb-4 border-gray-200 dark:border-gray-700">
+        Submit New Job
+    </h2>
+    
+    <form id="job_form" class="space-y-6">
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label for="name" class="md:col-span-1 text-gray-700 dark:text-gray-300 font-medium">Job name</label>
+            <input type="text" name="name" placeholder="myjob" value="{{ session.username }}" required 
+                   class="md:col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                          bg-gray-50 dark:bg-gray-700 dark:text-white
+                          focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label for="account" class="md:col-span-1 text-gray-700 dark:text-gray-300 font-medium">Account</label>
+            <input type="text" name="account" placeholder="account" value="{{ session.username }}" required 
+                   class="md:col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                          bg-gray-50 dark:bg-gray-700 dark:text-white
+                          focus:ring-blue-500 focus:border-blue-500 transition-colors">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label for="partition" class="md:col-span-1 text-gray-700 dark:text-gray-300 font-medium">Partition</label>
+            <select name="partition" id="partition_input"
+                    class="md:col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                           bg-white dark:bg-gray-700 dark:text-white
+                           focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                {% for part in partitions %}
+                    <option value="{{ part.name }}">{{ part.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+	<div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            <label for="qos" class="md:col-span-1 text-gray-700 dark:text-gray-300 font-medium">Qos</label>
+            <select name="qos" id="qos_input" onchange="OnQosChanged(this)"
+                    class="md:col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg
+                           bg-white dark:bg-gray-700 dark:text-white
+                           focus:ring-blue-500 focus:border-blue-500 transition-colors">
+                {% for qos in qoses %}
+                    <option value="{{ qos.name }}" data-default-time="{{ qos.default_time_minutes }}">{{ qos.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="grid grid-cols-4 gap-4 items-center">
+                <label for="ntasks" class="col-span-1 text-gray-700 dark:text-gray-300 font-medium">CPU(s)</label>
+                <input type="number" name="ntasks" placeholder="1" value="1" min="1" required 
+                       class="col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                              bg-gray-50 dark:bg-gray-700 dark:text-white
+                              focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            </div>
+
+            <div class="grid grid-cols-4 gap-4 items-center">
+                <label for="time" class="col-span-1 text-gray-700 dark:text-gray-300 font-medium">Time (min)</label>
+                <input id="time_input" type="number" name="time" placeholder="60" value="60" min="1" required 
+                       class="col-span-3 w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg 
+                              bg-gray-50 dark:bg-gray-700 dark:text-white
+                              focus:ring-blue-500 focus:border-blue-500 transition-colors">
+            </div>
+        </div>
+
+        <div>
+            <label for="job_script" class="block mb-2 text-gray-700 dark:text-gray-300 font-medium">Command Script</label>
+            <textarea name="job_script" form="job_form" required 
+                      placeholder="#your code here"
+                      class="w-full h-48 p-4 border border-gray-300 dark:border-gray-600 rounded-lg 
+                             bg-gray-50 dark:bg-gray-700 dark:text-white
+                             focus:ring-blue-500 focus:border-blue-500 text-sm font-mono"></textarea>
+        </div>
+
+        <div class="flex space-x-4 pt-4">
+            <button type="submit" 
+                    class="px-8 py-3 bg-blue-600 text-white font-bold rounded-lg shadow-lg hover:bg-blue-700 
+                           dark:bg-blue-700 dark:hover:bg-blue-600 transition duration-150 transform hover:scale-[1.01]">
+                Submit Job
+            </button>
+            <button type="button" onclick="previewJobForm()" 
+                    class="px-8 py-3 bg-gray-200 text-gray-700 font-bold rounded-lg shadow-md hover:bg-gray-300 
+                           dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600 transition duration-150">
+                Preview
+            </button>
+        </div>
+            
+        <p id="message" class="message text-sm pt-4 dark:text-gray-300"></p>
+    </form>
+</div>
+
+<div id="previewModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 z-50 flex justify-center items-center" style="display:none;">
+    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 w-11/12 md:w-2/3 max-h-[90vh] overflow-y-auto relative">
+        <button type="button" class="close absolute top-3 right-3 text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white text-2xl" onclick="document.getElementById('previewModal').style.display='none'">&times;</button>
+        <h2 class="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100 border-b pb-2">Job Preview</h2>
+        <pre id="previewContent" class="bg-gray-50 dark:bg-gray-900 p-4 rounded-lg text-sm text-gray-700 dark:text-gray-300 overflow-x-auto"></pre>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+    <script defer src="{{ url_for('static', filename='js/submit.js') }}"></script>
+{% endblock %}

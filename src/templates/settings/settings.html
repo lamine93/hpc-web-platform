@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+
+<div class="space-y-10 divide-y divide-gray-200 dark:divide-gray-700">
+
+	<h2 class="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">
+            Default Job Settings
+        </h2>
+        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+            Define pre-selected options for the job submission form.
+        </p>
+
+        <div class="mt-6 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+            
+            <div class="sm:col-span-2">
+                <label for="default-partition" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                    Default Partition
+                </label>
+                <div class="mt-2">
+                    <select id="default-partition" name="default-partition" onchange="saveDefaultSlurmSettings()" 
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800">
+                        {% for partition in available_partitions %}
+                        <option value="{{ partition }}">{{ partition }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <div class="sm:col-span-2">
+                <label for="default-qos" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                    Default QOS (Quality of Service)
+                </label>
+                <div class="mt-2">
+                    <select id="default-qos" name="default-qos" onchange="saveDefaultSlurmSettings()"
+                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800">
+                        {% for qos in available_qoses %}
+                        <option value="{{ qos }}">{{ qos }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="sm:col-span-2">
+                <label for="default-timelimit" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                    Default TimeLimit (Ex: 04:00:00 ou 4h)
+                </label>
+                <div class="mt-2">
+                    <input type="text" id="default-timelimit" name="default-timelimit" 
+                           placeholder="Ex: 04:00:00"
+                           class="block w-full rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800"
+                    >
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <div class="h-px bg-gray-200 dark:bg-gray-700 my-10"></div>
+
+    <div class="pt-10">
+        <h2 class="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">
+            Data Refresh Rate
+        </h2>
+        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+            Control the update frequency for "Jobs" and "Resources" tables.
+        </p>
+
+        <div class="mt-6">
+            <label for="refresh-rate" class="block text-sm font-medium leading-6 text-gray-900 dark:text-gray-100">
+                Frequency (in seconds)
+            </label>
+            <div class="mt-2">
+                <select id="refresh-rate" onchange="saveRefreshRate()"
+                        class="block w-full sm:w-1/3 rounded-md border-0 py-1.5 text-gray-900 dark:text-gray-100 shadow-sm ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-blue-600 dark:focus:ring-blue-500 sm:text-sm sm:leading-6 bg-white dark:bg-gray-800">
+                    <option value="10">10 seconds (Intensive tracking)</option>
+                    <option value="30">30 seconds (Recommended)</option>
+                    <option value="60">60 seconds (Resource saving)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="h-px bg-gray-200 dark:bg-gray-700 my-10"></div>
+
+    <div class="pt-10">
+        <h2 class="text-xl font-semibold leading-7 text-gray-900 dark:text-gray-100">
+            About and Support
+        </h2>
+        <p class="mt-1 text-sm leading-6 text-gray-600 dark:text-gray-400">
+            Application version and help resources.
+        </p>
+
+        <dl class="mt-6 divide-y divide-gray-100 dark:divide-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg">
+            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50 dark:bg-gray-800/50">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Application Version</dt>
+                <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">1.0.0-beta</dd>
+            </div>
+	    <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50 dark:bg-gray-800/50">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Slurm Version</dt>
+                <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">
+			{{slurm_version}}
+                </dd>
+            </div>
+            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-white dark:bg-gray-900/50">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Project Documentation</dt>
+                <dd class="mt-1 text-sm leading-6 text-blue-600 dark:text-blue-400 sm:col-span-2 sm:mt-0">
+                    <a href="#" class="hover:underline">Link to README or Docs</a>
+                </dd>
+            </div>
+            <div class="px-4 py-3 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6 bg-gray-50 dark:bg-gray-800/50">
+                <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Developer</dt>
+                <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">
+                    lamine93
+                </dd>
+            </div>
+        </dl>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+	<script defer src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

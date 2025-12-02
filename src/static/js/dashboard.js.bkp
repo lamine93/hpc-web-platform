@@ -1,0 +1,444 @@
+// ============================================================================
+// dashboard.js
+// Page script using the SocketPage helper from common.js
+// - waits for socket connect before first request
+// - avoids duplicate intervals across navigations
+// - pauses when the tab is hidden, resumes when visible
+// - triggers an immediate refresh after reconnect
+// ============================================================================
+// --- CHART.JS SETUP ---
+// Global chart variables and constants
+let jobStatusChart, jobFailureChart, nodeStatusChart, nodeDownChart;
+const MAX_DATA_POINTS = 40; // Sliding window: 40 points (3m 20s at 5s interval)
+const UPDATE_INTERVAL_MS = 5000; // Request data every 5 seconds (Corrected from 180000ms)
+CHART_UPDATE_INTERVAL_MS = 60000;
+/*
+const initCharts = () => {
+    // Base configuration for line charts
+    const chartOptions = { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    };
+
+    const stackedOptions = {
+        scales: { 
+            y: { 
+                beginAtZero: true, 
+                stacked: true // <-- C'est ce que nous voulons
+            } 
+        }
+    };
+
+    // 1. Job Status Chart
+    jobStatusChart = new Chart(document.getElementById('jobStatusChart'), {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+		{ label: 'Running', data: [], backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgb(75, 192, 192)', tension: 0.3, fill: true },
+		{ label: 'Pending', data: [], backgroundColor: 'rgba(255, 159, 64, 0.7)', borderColor: 'rgb(255, 159, 64)', tension: 0.3, fill: true },
+		{ label: 'Completed', data: [], backgroundColor: 'rgba(153, 102, 255, 0.7)', borderColor: 'rgb(153, 102, 255)', tension: 0.3, fill: true }
+            ]
+        },
+	options: {
+		responsive: true, 
+		maintainAspectRatio: false,
+		scales: { 
+		    y: { 
+			beginAtZero: true, 
+			stacked: true // <--- L'OPTION CLÉ
+		    } 
+		},
+		plugins: { 
+		    title: { display: true, text: 'Job Status (Running, Pending, Completed)' } 
+		} 
+    	}
+        //options: {...chartOptions, plugins: { title: { display: true, text: 'Job Status (Running, Pending, Completed)' } } }
+    });
+
+    // 2. Job Failure Chart
+    jobFailureChart = new Chart(document.getElementById('jobFailureChart'), {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+            	{ label: 'Cancelled', data: [], backgroundColor: 'rgba(201, 203, 207, 0.7)', borderColor: 'rgb(201, 203, 207)', tension: 0.3, fill: true },
+                { label: 'Failed', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+            ]
+        },
+        //options: {...chartOptions, plugins: { title: { display: true, text: 'Error/Cancellation Status' } } }
+	options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Error/Cancellation Status (Failed, Cancelled)' } } }
+    });
+
+    // 3. Node Status Chart
+    nodeStatusChart = new Chart(document.getElementById('nodeStatusChart'), {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+                { label: 'Allocated', data: [], backgroundColor: 'rgba(54, 162, 235, 0.7)', borderColor: 'rgb(54, 162, 235)', tension: 0.3, fill: true },
+                { label: 'Idle', data: [], backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgb(75, 192, 192)', tension: 0.3, fill: true },
+                { label: 'Down/Drain', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+            ]
+        },
+
+	options: {
+		responsive: true, 
+		maintainAspectRatio: false,
+		scales: { 
+		    y: { 
+			beginAtZero: true, 
+			stacked: true
+		    } 
+		},
+		plugins: { 
+		    title: { display: true, text: 'Node Status (Allocated, Idle, Down/Drain)' } 
+		} 
+	 }
+    });
+
+    // 4. Node Down Chart
+    nodeDownChart = new Chart(document.getElementById('nodeDownChart'), {
+        type: 'line',
+        data: {
+            labels: [], 
+            datasets: [
+            	{ label: 'Drain/Maint', data: [], backgroundColor: 'rgba(255, 205, 86, 0.7)', borderColor: 'rgb(255, 205, 86)', tension: 0.3, fill: true },
+                { label: 'Down', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+	    ]
+        },
+    	options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Error/Maintenance Nodes (Down, Drain)' } } }
+    });
+};
+*/
+/*
+const updateAllCharts = (data) => {
+    const ts = data.timestamp;
+    const errorEl = document.getElementById('metrics-error');
+    if (errorEl) errorEl.innerText = ''; // Clear previous errors
+
+    // Helper function to update data in a single chart
+    const updateChart = (chart, values) => {
+        if (!chart) return;
+        
+        chart.data.labels.push(ts);
+        
+        values.forEach((v, i) => {
+            if (chart.data.datasets[i]) {
+                chart.data.datasets[i].data.push(v);
+            }
+        });
+        
+        // Handle the sliding window (remove oldest points)
+        if (chart.data.labels.length > MAX_DATA_POINTS) {
+            chart.data.labels.shift();
+            chart.data.datasets.forEach(dataset => dataset.data.shift());
+        }
+        
+        chart.update(); 
+    };
+
+    // Update 4 charts
+    updateChart(jobStatusChart, [data.running_jobs, data.pending_jobs, data.completed_jobs]);
+    updateChart(jobFailureChart, [data.failed_jobs, data.cancelled_jobs]);
+    updateChart(nodeStatusChart, [data.allocated_nodes, data.idle_nodes, data.nodes]); // Using 'nodes' for total
+    updateChart(nodeDownChart, [data.down_nodes, data.drain_nodes]);
+};
+*/
+
+// =========================================================
+// Fonction utilitaire : Chargement des données depuis localStorage
+// =========================================================
+const loadChartData = (storageKey, defaultDatasets) => {
+    const storedData = localStorage.getItem(storageKey);
+    
+    if (storedData) {
+        try {
+            const data = JSON.parse(storedData);
+            
+            // Si l'historique contient des données, nous devons copier les couleurs, fill, etc.
+            // (qui ne sont pas stockées pour économiser de l'espace)
+            if (data.datasets.length === defaultDatasets.length) {
+                data.datasets.forEach((d, i) => {
+                    // Copier les propriétés visuelles (backgroundColor, borderColor, tension, fill)
+                    d.backgroundColor = defaultDatasets[i].backgroundColor;
+                    d.borderColor = defaultDatasets[i].borderColor;
+                    d.fill = defaultDatasets[i].fill;
+                    d.tension = defaultDatasets[i].tension;
+                });
+                return data;
+            }
+        } catch (e) {
+            console.error(`Erreur lors du chargement des données de ${storageKey}:`, e);
+            localStorage.removeItem(storageKey); // Nettoyer les données corrompues
+        }
+    }
+    
+    // Retourner les données par défaut (vides) si pas d'historique ou si échec du chargement
+    return { labels: [], datasets: defaultDatasets };
+};
+
+
+const initCharts = () => {
+    // Base configuration for line charts
+    const chartOptions = { 
+        responsive: true, 
+        maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true } }
+    };
+    
+    // Configuration Stacked
+    const stackedOptions = {
+        scales: { 
+            y: { 
+                beginAtZero: true, 
+                stacked: true
+            } 
+        }
+    };
+    
+    // =========================================================
+    // 1. Job Status Chart
+    // =========================================================
+    const jobStatusDefaultDatasets = [
+        { label: 'Running', data: [], backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgb(75, 192, 192)', tension: 0.3, fill: true },
+        { label: 'Pending', data: [], backgroundColor: 'rgba(255, 159, 64, 0.7)', borderColor: 'rgb(255, 159, 64)', tension: 0.3, fill: true },
+        { label: 'Completed', data: [], backgroundColor: 'rgba(153, 102, 255, 0.7)', borderColor: 'rgb(153, 102, 255)', tension: 0.3, fill: true }
+    ];
+
+    const jobStatusInitialData = loadChartData('jobStatusChartData', jobStatusDefaultDatasets);
+
+    jobStatusChart = new Chart(document.getElementById('jobStatusChart'), {
+        type: 'line',
+        data: jobStatusInitialData, // <-- Utilisation des données persistantes
+        options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Job Status (Running, Pending, Completed)' } } }
+    });
+
+
+    // =========================================================
+    // 2. Job Failure Chart
+    // =========================================================
+    const jobFailureDefaultDatasets = [
+        { label: 'Cancelled', data: [], backgroundColor: 'rgba(201, 203, 207, 0.7)', borderColor: 'rgb(201, 203, 207)', tension: 0.3, fill: true },
+        { label: 'Failed', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+    ];
+    
+    const jobFailureInitialData = loadChartData('jobFailureChartData', jobFailureDefaultDatasets);
+
+    jobFailureChart = new Chart(document.getElementById('jobFailureChart'), {
+        type: 'line',
+        data: jobFailureInitialData, // <-- Utilisation des données persistantes
+        options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Error/Cancellation Status (Failed, Cancelled)' } } }
+    });
+
+    // =========================================================
+    // 3. Node Status Chart
+    // =========================================================
+    const nodeStatusDefaultDatasets = [
+        { label: 'Allocated', data: [], backgroundColor: 'rgba(54, 162, 235, 0.7)', borderColor: 'rgb(54, 162, 235)', tension: 0.3, fill: true },
+        { label: 'Idle', data: [], backgroundColor: 'rgba(75, 192, 192, 0.7)', borderColor: 'rgb(75, 192, 192)', tension: 0.3, fill: true },
+        { label: 'Down/Drain', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+    ];
+
+    const nodeStatusInitialData = loadChartData('nodeStatusChartData', nodeStatusDefaultDatasets);
+
+    nodeStatusChart = new Chart(document.getElementById('nodeStatusChart'), {
+        type: 'line',
+        data: nodeStatusInitialData, // <-- Utilisation des données persistantes
+        options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Node Status (Allocated, Idle, Down/Drain)' } } }
+    });
+
+    // =========================================================
+    // 4. Node Down Chart
+    // =========================================================
+    const nodeDownDefaultDatasets = [
+        { label: 'Drain/Maint', data: [], backgroundColor: 'rgba(255, 205, 86, 0.7)', borderColor: 'rgb(255, 205, 86)', tension: 0.3, fill: true },
+        { label: 'Down', data: [], backgroundColor: 'rgba(255, 99, 132, 0.7)', borderColor: 'rgb(255, 99, 132)', tension: 0.3, fill: true }
+    ];
+
+    const nodeDownInitialData = loadChartData('nodeDownChartData', nodeDownDefaultDatasets);
+    
+    nodeDownChart = new Chart(document.getElementById('nodeDownChart'), {
+        type: 'line',
+        data: nodeDownInitialData, // <-- Utilisation des données persistantes
+        options: {...chartOptions, ...stackedOptions, plugins: { title: { display: true, text: 'Error/Maintenance Nodes (Down, Drain)' } } }
+    });
+};
+
+
+
+// =========================================================
+// Fonction utilitaire : Mise à jour et Sauvegarde d'un seul graphique
+// =========================================================
+const updateChart = (chart, values, storageKey, ts) => {
+    // Vérification de la garde
+    if (!chart) return;
+
+    // On suppose que 'ts' est défini ou accessible ici (sinon il faut le passer en paramètre)
+    // Si 'ts' vient de 'data.timestamp' dans updateAllCharts, il FAUT le passer en paramètre.
+    // MODIFICATION: Ajout de ts comme paramètre
+    if (!ts) {
+        console.error("Timestamp 'ts' is missing in updateChart call.");
+        return;
+    }
+
+    chart.data.labels.push(ts);
+
+    values.forEach((v, i) => {
+        if (chart.data.datasets[i]) {
+            chart.data.datasets[i].data.push(v);
+        }
+    });
+
+    // Handle the sliding window (remove oldest points)
+    if (chart.data.labels.length > MAX_DATA_POINTS) {
+        chart.data.labels.shift();
+        chart.data.datasets.forEach(dataset => dataset.data.shift());
+    }
+
+    chart.update();
+
+    // L'ENREGISTREMENT EST MAINTENANT ACTIF SEULEMENT SI storageKey est fourni
+    if (storageKey) {
+        // 1. Créer un objet simple pour la sauvegarde
+        const chartDataToStore = {
+            labels: chart.data.labels,
+            datasets: chart.data.datasets.map(d => ({
+                label: d.label,
+                data: d.data
+            }))
+        };
+
+        // 2. Sauvegarder dans localStorage
+        localStorage.setItem(storageKey, JSON.stringify(chartDataToStore));
+    }
+};
+
+
+
+const updateAllCharts = (data) => {
+    const ts = data.timestamp; // ts est défini ici
+    const errorEl = document.getElementById('metrics-error');
+    if (errorEl) errorEl.innerText = ''; // Clear previous errors
+
+    // Appel corrigé avec le timestamp et la clé de stockage
+
+    // Chart 1: Job Status
+    updateChart(
+        jobStatusChart,
+        [data.running_jobs, data.pending_jobs, data.completed_jobs],
+        'jobStatusChartData', // <-- Clé de stockage ajoutée
+        ts // <-- Le timestamp doit être passé
+    );
+
+    // Chart 2: Job Failure
+    updateChart(
+        jobFailureChart,
+        [data.failed_jobs, data.cancelled_jobs],
+        'jobFailureChartData', // <-- Clé de stockage ajoutée
+        ts
+    );
+
+    // Chart 3: Node Status
+    updateChart(
+        nodeStatusChart,
+        [data.allocated_nodes, data.idle_nodes, data.nodes], // nodes pour le total
+        'nodeStatusChartData', // <-- Clé de stockage ajoutée
+        ts
+    );
+
+    // Chart 4: Node Down
+    updateChart(
+        nodeDownChart,
+        [data.down_nodes, data.drain_nodes],
+        'nodeDownChartData', // <-- Clé de stockage ajoutée
+        ts
+    );
+};
+
+
+$(function () {
+  if (!window.socket || !window.SocketPage) {
+    console.error('[dashboard] Missing window.socket or SocketPage helper');
+    return;
+  }
+  
+  
+  initCharts();
+
+  const page = SocketPage('dashboard');
+
+  // What we ask from the server
+  const requestStats = () => {
+    console.log('[dashboard] emit stats');
+    window.socket.emit('stats');
+  };
+
+  const requestChartData = () => {
+    window.socket.emit('request_metrics'); 
+  };
+
+  // Small helper to update a counter if the element exists
+  const setTxt = (id, val) => {
+    const el = document.getElementById(id);
+    if (el != null && val != null) el.innerText = val;
+  };
+
+  // Listen to server payload
+  page.on('stats', (payload) => {
+    console.log('[dashboard] received:', payload);
+
+    if (payload && payload.error) {
+      console.error('[dashboard] error:', payload.error);
+      return;
+    }
+
+    // Support both flat payloads and payload.html for backward compatibility
+    setTxt('nodes',        payload?.nodes ?? payload?.html?.nodes);
+    setTxt('cores',        payload?.cores ?? payload?.html?.cores);
+    setTxt('running_jobs', payload?.running_jobs ?? payload?.html?.running_jobs);
+    setTxt('total_jobs',   payload?.total_jobs ?? payload?.html?.total_jobs);
+
+    // If server sends HTML fragments, render them by id
+    if (payload && payload.html) {
+      for (const [key, value] of Object.entries(payload.html)) {
+        $('#' + key).html(value);
+      }
+    }
+  });
+  
+  page.on('metrics_response', (payload) => {
+    const errorEl = document.getElementById('metrics-error');
+
+    if (payload && payload.error) {
+        if (errorEl) errorEl.innerText = `Error retrieving chart data: ${payload.error}`;
+        return;
+    }
+    if (errorEl) errorEl.innerText = '';
+    
+    // Update Charts (New Logic)
+    if (payload && payload.timestamp) {
+        updateAllCharts(payload);
+	console.log('[chart] graphic → refresh now', payload);
+    }
+  });
+
+  // On reconnect, trigger an immediate refresh
+  page.onReconnect(() => {
+    console.log('[dashboard] reconnect → refresh now');
+    requestStats();
+  });
+
+  // Poll every 3 minutes, fire once immediately when connected,
+  // and skip when the tab is hidden to save resources
+  page
+    .poll(180000, requestStats, { immediate: true, visibleOnly: true })
+    .markStarted();
+
+  page
+    .poll(CHART_UPDATE_INTERVAL_MS, requestChartData, { immediate: true, visibleOnly: true });
+
+});
+
+

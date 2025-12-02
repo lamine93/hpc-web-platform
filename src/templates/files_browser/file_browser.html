@@ -1,0 +1,217 @@
+{% extends "base.html" %}
+
+{% block title %}Work Directory Files{% endblock %}
+
+{% block content %}
+<div class="px-4 pt-16 sm:px-6 lg:px-8">
+    
+    <div x-data="fileBrowser()">
+
+        <div class="sm:flex sm:items-center justify-between">
+            
+            <div class="sm:flex-auto">
+                <h1 class="text-2xl font-semibold leading-6 text-gray-900 dark:text-gray-100">
+                    Job Working Directory
+                </h1>
+                <p class="mt-2 text-sm text-gray-700 dark:text-gray-400">
+                    Current files in: 
+                    <code class="font-mono bg-gray-100 dark:bg-gray-800 p-1 rounded text-blue-600 dark:text-blue-400">
+                        {{ display_path }}
+                    </code>
+                </p>
+            </div>
+            
+            <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+		<button type="button"
+		    @click="deleteSelectedFiles()"
+		    :disabled="selectedFiles.length === 0 || loading"
+		    class="inline-flex items-center rounded-md bg-red-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600 disabled:opacity-50 transition duration-150">
+		<svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.764-1.9A1.75 1.75 0 0 0 16.346 4H7.654a1.75 1.75 0 0 0-1.688 1.9A.75.75 0 0 0 6 6a.75.75 0 0 0 .75.75h10.5a.75.75 0 0 0 .75-.75c0-.441-.358-.8-1.75-.9zM5 9h14M8 12v6M12 12v6M16 12v6"/></svg>
+		    Delete (<span x-text="selectedFiles.length">0</span>)
+    		</button>
+                <button type="button" 
+                        @click="loadContents()" 
+                        :disabled="loading"
+                        class="inline-flex items-center rounded-md bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-50 transition duration-150">
+                    
+                    <template x-if="loading">
+                        <svg class="animate-spin h-5 w-5 text-white mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path d="M12 4.75V.75M12 23.25V19.25M21.25 12h-4M.75 12h4M18.66 18.66l-2.83-2.83M8.17 8.17L5.34 5.34M18.66 5.34l-2.83 2.83M8.17 15.83l-2.83 2.83"/>
+                        </svg>
+                    </template>
+                    <template x-if="!loading">
+                        <svg class="h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.992 0l3.181 3.181a1.25 1.25 0 0 0 2.122 0l2.353-2.352M12 6.75A5.25 5.25 0 0 1 17.25 12M6.75 17.25A5.25 5.25 0 0 1 12 12" />
+                        </svg>
+                    </template>
+                    Refresh
+                </button>
+            </div>
+        </div>
+        
+        <div x-show="error" class="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded relative mb-4 mt-4 transition duration-150">
+            <strong class="font-bold">Error:</strong>
+            <span class="block sm:inline" x-text="error"></span>
+        </div>
+
+        <div x-show="loading" class="text-center py-12">
+            <svg class="animate-spin h-6 w-6 text-blue-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">...</svg>
+            <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Loading directory...</p>
+        </div>
+
+        <div x-show="!loading && !error" class="mt-4 shadow overflow-hidden border-b border-gray-200 dark:border-gray-700 sm:rounded-lg">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-800">
+                    <tr>
+			<th scope="col" class="relative px-6 py-3 w-1">
+            			<input type="checkbox" @change="toggleSelectAll($event)" class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600">
+        		</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider w-1/2">Name</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Size</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Last Modified</th>
+                        <th scope="col" class="relative px-6 py-3">
+                            <span class="sr-only">Actions</span>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                    <template x-for="item in contents" :key="item.name">
+                        <tr x-show="item.type === 'file'" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition duration-100">
+			    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            			<input type="checkbox" 
+				   :value="item.name"
+				   x-model="selectedFiles"
+				   class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600">
+			    </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                                <span x-show="item.type === 'file'">
+                                    <svg class="h-5 w-5 text-gray-400 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z"/></svg>
+                                </span>
+                                <span x-text="item.name"></span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="item.size"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400" x-text="item.modified_date"></td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a :href="`/api/file_browser/download?filepath=${workDirPath}/${item.name}`" 
+                                   class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-200 ml-4"
+                                   title="Download">
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                                </a>
+                            </td>
+			 </tr>
+                    </template>
+                    <tr x-show="contents.filter(item => item.type === 'file').length === 0 && !loading && !error">
+                        <td colspan="4" class="text-center py-10 text-gray-500 dark:text-gray-400">
+                            No files found in this directory.
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+<script>
+    function fileBrowser() {
+        return {
+            // !!! FIXED PATH TO CHECK !!! This path is relative to the Flask secure BASE_PATH (/scratch/username).
+            // An empty path ('') points to the root of the BASE_PATH.
+            workDirPath: '', 
+            contents: [],
+            loading: false,
+	    selectedFiles: [],
+            error: '',
+            
+            init() {
+                this.loadContents(); 
+            },
+
+            async loadContents() {
+                this.loading = true;
+                this.error = '';
+                
+                // Ensure the path is clean before sending to the API.
+                const path = this.workDirPath.replace(/^\/+|\/+$/g, ''); 
+
+                try {
+                    const response = await fetch(`/api/file_browser/list?path=${path}`);
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        this.error = data.error || `Failed to load directory: Status ${response.status}`;
+                        return;
+                    }
+
+                    // We only keep elements of type 'file'
+                    this.contents = data.contents.filter(item => item.type === 'file');
+                    
+                } catch (e) {
+                    console.error('Fetch error:', e);
+                    this.error = 'Could not connect to the file system API.';
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+
+		toggleSelectAll(event) {
+		    if (event.target.checked) {
+			// Select all files (since we filter for 'file' type in contents)
+			this.selectedFiles = this.contents.map(item => item.name);
+		    } else {
+			// Deselect all
+			this.selectedFiles = [];
+		    }
+		},
+
+		async deleteSelectedFiles() {
+		    if (this.selectedFiles.length === 0) return;
+		    
+		    const fileList = this.selectedFiles.join('\n- ');
+		    if (!confirm(`Are you sure you want to delete the following files?\n\n- ${fileList}`)) {
+			return;
+		    }
+
+		    this.loading = true;
+		    this.error = '';
+
+		    try {
+			const response = await fetch('/api/file_browser/delete', {
+			    method: 'POST',
+			    headers: {
+				'Content-Type': 'application/json',
+			    },
+			    body: JSON.stringify({ 
+				files: this.selectedFiles,
+				// Optionally send the base path for extra security/clarity, 
+				// but the backend should derive the absolute path securely.
+			    }),
+			});
+
+			const data = await response.json();
+
+			if (!response.ok) {
+			    this.error = data.error || `Failed to delete files: Status ${response.status}`;
+			    return;
+			}
+
+			// Success: Clear selection and reload the list
+			this.selectedFiles = [];
+			this.loadContents();
+			
+		    } catch (e) {
+			console.error('Delete error:', e);
+			this.error = 'Could not connect to the deletion API.';
+		    } finally {
+			this.loading = false;
+		    }
+		},
+
+
+        }
+    }
+</script>
+{% endblock %}

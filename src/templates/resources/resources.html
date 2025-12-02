@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Resources{% endblock %}
+
+{% block content %}
+
+<div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 transition-colors">
+    <h2 class="text-2xl font-extrabold mb-6 text-gray-800 dark:text-gray-100 border-b pb-4 border-gray-200 dark:border-gray-700">
+        Cluster Partitions Overview
+    </h2>
+
+    <div class="-mx-6 overflow-x-auto">
+        <div class="inline-block min-w-full align-middle">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead>
+                    <tr>
+                        {% set head_classes = "px-3 py-3.5 text-left text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400" %}
+                        
+                        <th scope="col" class="{{ head_classes }} sm:pl-6 lg:pl-8">PARTITION</th>
+                        <th scope="col" class="{{ head_classes }}">STATE</th>
+                        <th scope="col" class="{{ head_classes }}">MEMORY</th>
+                        <th scope="col" class="{{ head_classes }}">CPUS</th>
+                        <th scope="col" class="{{ head_classes }}">NODESLIST</th>
+                    </tr>
+                </thead>
+                <tbody id="resources" class="divide-y divide-gray-100 dark:divide-gray-700 bg-white dark:bg-gray-800 **text-blue-800 dark:text-blue-400**"> </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+    <script defer src="{{ url_for('static', filename='js/resources.js') }}"></script>
+{% endblock %}

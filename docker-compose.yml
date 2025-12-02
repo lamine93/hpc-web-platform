@@ -1,0 +1,99 @@
+services:
+  mongodb:
+    platform: linux/arm64
+    image: mongo:6
+    hostname: mongodb
+    container_name: mongodb
+    environment:
+      TZ: Europe/Paris
+    volumes:
+      - mongo_db_data:/data/db
+    networks:
+      - slurm-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.runCommand({ping: 1})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  ldap:
+    image: osixia/openldap:1.5.0
+    container_name: ldap
+    hostname: ldap
+    environment:
+      - LDAP_ORGANISATION=Demo HPC
+      - LDAP_DOMAIN=example.org
+      - LDAP_ADMIN_PASSWORD=admin
+    networks: [slurm-network]
+  
+  
+  prometheus:
+    platform: linux/arm64
+    image: prom/prometheus:latest
+    container_name: prometheus_server
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+    ports:
+      - "9090:9090" 
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - slurm-network
+
+  slurm-gui:
+    user: "990:990"
+    platform: linux/arm64
+    hostname: slurm-gui
+    image: slurm-gui:1.0.0
+    build:
+      context: .
+    container_name: slurm-gui
+    depends_on:
+      ldap:
+        condition: service_started
+      prometheus: 
+        condition: service_started
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    environment:
+      - SLURMRESTD_URL=http://slurmrestd:6820
+      - SLURMCTLD_HOST=slurmctld
+      - SLURM_AUTH_TYPE=jwt
+      - SLURM_USER=slurm
+      - SLURM_API_VERSION=v0.0.43
+      - HOME=/home/slurm
+      - SLURM_JWT_FILE=/tokens/slurm.jwt
+      - PROMETHEUS_URL=http://prometheus:9090/api/v1/query
+
+    networks:
+      - slurm-network
+    volumes:
+      - slurm_tokens:/tokens:ro
+      - etc_slurm:/etc/slurm:ro
+      - slurm_jobdir:/data:rw
+      - work_dir:/scratch:rw
+
+    
+volumes:
+  etc_slurm:
+    external: true
+  slurm_jobdir:
+    external: true
+  work_dir:
+    external: true
+  slurm_tokens:
+    external: true
+  prometheus_data:
+  mongo_db_data:
+    name: mongo_db_data
+
+networks:
+  slurm-network:
+    external: true
+    name: slurm-network
+

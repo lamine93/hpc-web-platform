@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}Account Profile{% endblock %}
+
+{% block content %}
+
+<div class="px-4 pt-16 sm:px-6 lg:px-8">
+    <div class="sm:flex sm:items-center">
+        <div class="sm:flex-auto">
+            <h1 class="text-2xl font-semibold leading-6 text-gray-900 dark:text-gray-100">User Account Profile</h1>
+        </div>
+    </div>
+    
+    <div class="mt-8">
+        
+        <div class="rounded-lg bg-white dark:bg-gray-800 shadow-lg overflow-hidden mb-8">
+            <div class="p-6 sm:flex sm:items-center">
+                
+                <div class="flex-shrink-0">
+                    <div class="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-2xl font-bold text-blue-600 dark:text-blue-300">
+                        {{ session.username[0]|upper }}
+                    </div>
+                </div>
+                
+                <div class="mt-4 sm:mt-0 sm:ml-6">
+                    <h3 class="text-2xl font-bold leading-7 text-gray-900 dark:text-gray-100">{{ session.username }}</h3>
+                    <p class="mt-1 max-w-2xl text-sm text-gray-500 dark:text-gray-400">
+                        {{ session.mail }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="border-t border-gray-100 dark:border-gray-700">
+            <dl class="divide-y divide-gray-100 dark:divide-gray-700">
+                
+                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                    <dt class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Username (UID)</dt>
+                    <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">
+                        {{ session.username }}
+                    </dd>
+                </div>
+                
+                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                    <dt class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Full Name</dt>
+                    <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">
+                        {{ session.fullname }}
+                    </dd>
+                </div>
+                
+                <div class="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                    <dt class="text-sm font-medium leading-6 text-gray-900 dark:text-gray-200">Email Address</dt>
+                    <dd class="mt-1 text-sm leading-6 text-gray-700 dark:text-gray-300 sm:col-span-2 sm:mt-0">
+                        {{ session.email }}
+                    </dd>
+                </div>
+           </dl>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

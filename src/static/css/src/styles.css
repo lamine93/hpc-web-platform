@@ -1,0 +1,169 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+.selected { background-color:  hsl(211, 100%, 50%); }
+.hover { background-color: hsl(211, 100%, 50%); }
+.border-bottom { border-bottom: 1px solid #ddd; }
+
+.border-bottom {
+    border-bottom: 1px solid #d1d5db; /* Utilisez une couleur de bordure qui correspond à votre thème */
+}
+
+.column {
+    display: flex;
+    justify-content: center; /* Centre horizontalement */
+    align-items: center; /* Centre verticalement */
+    min-width: 50%;
+    flex: 10;
+    height: 100vh; /* Assure que la colonne prend toute la hauteur de la page */
+    /* margin-top: 50px; */
+}
+
+
+.console {
+    width: 80%; /* Largeur du formulaire */
+    max-width: 800px; /* Largeur maximale */
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+.form-input, .form-select, .form-textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: #007BFF;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+
+.hidden { display: none; }
+.modal { position: fixed; z-index: 50; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgb(0,0,0); background-color: rgba(0,0,0,0.4); }
+
+#contextMenu {
+    display: none;
+    position: absolute;
+    z-index: 1000;
+    width: 200px;
+    border-style: solid;
+    background: white;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+#contextMenu button {
+    display: block;
+    width: 100%;
+    padding: 8px 12px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: black;
+    cursor: pointer;
+}
+
+#contextMenu button:hover {
+    background-color: #f0f0f0;
+}
+
+.py-10 {
+    padding-top: 0.5rem;
+    padding-bottom: 2.5rem;
+}
+
+
+.filter-container {
+    margin-bottom: 20px;
+}
+.filter-container label {
+    display: block;
+    margin-bottom: 5px;
+}
+.filter-group {
+    display: inline-block;
+    margin-left: 30px;
+}
+
+.button-container {
+    display: flex;
+    gap: 10px; /* Espace entre les boutons */
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    margin-left: 25%;
+}
+
+.button-group button {
+    color: white;
+    background: linear-gradient(to right, #1D4ED8, #2563EB, #1E40AF); /* Dégradé de bleu */
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.button-group button:hover {
+    background: linear-gradient(to right, #2563EB, #1E40AF, #1D4ED8); /* Changer de dégradé au survol */
+}
+
+.button-group button:focus {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.6);
+}
+.message {
+    margin-top: 20px; /* Espace au-dessus du message */
+    font-size: 16px;
+    color: #333;
+    font-weight: bold;
+}
+
+.modal-preview {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    margin-top: 4em;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 65%;
+    height: 70%;
+    overflow: scroll;
+}
+
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}

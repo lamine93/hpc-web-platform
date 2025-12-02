@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Job {{ job.id }} Details{% endblock %}
+
+{% block content %}
+
+
+  <div x-data="jobDetailsComponent()" class="container mx-auto p-6">
+
+    <button onclick="window.location.href='{{ url_for('slurm.jobs') }}'" class="mb-6 inline-flex items-center text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition">
+        <i class="fas fa-arrow-left mr-2"></i> Back to jobs
+    </button>
+    
+    <div class="flex justify-between items-center pb-4 border-b border-gray-200 dark:border-gray-700">
+        <h1 class="text-2xl font-semibold text-gray-800 dark:text-gray-100">
+            Job <span x-text="job.job_id"></span>
+        </h1>
+        <span class="px-3 py-1 text-sm font-semibold rounded-full" 
+              :class="{
+                  'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100': job_status === 'RUNNING' || job_status === 'COMPLETED',
+                  'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100': job_status === 'PENDING' || job_status === 'SCHEDULING',
+                  'bg-red-100 text-red-800 dark:bg-red-700 dark:text-red-100': job_status === 'FAILED' || job_status === 'CANCELLED',
+                  'bg-gray-100 text-gray-800 dark:bg-gray-600 dark:text-gray-200': job_status === 'TERMINATED'
+              }" 
+              x-text="job_status">
+              {{ job.state }} 
+        </span>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="col-span-1">
+            
+            <div class="mb-8 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                <h3 class="text-lg font-medium mb-3 dark:text-white">Actions</h3>
+                <div class="space-y-3">
+                    
+                    <button @click="killJob()" 
+                            x-show="job_status === 'RUNNING' || job_status === 'PENDING' || job_status === 'SUSPENDED'"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition">
+                        <i class="fas fa-times mr-2"></i> Kill
+                    </button>
+                    
+                    <button @click="openLogsModal()" 
+                            class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-eye mr-2"></i> View Output
+                    </button>
+                    
+                    <button @click="toggleSuspendJob()" 
+                            x-show="job_status === 'RUNNING'"
+                            :class="job_status === 'RUNNING' ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-green-600 hover:bg-green-700'"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-white rounded-lg transition">
+                        <i class="fas mr-2" :class="job_status === 'RUNNING' ? 'fa-pause' : 'fa-play'"></i> 
+                        <span x-text="job_status === 'RUNNING' ? 'Suspend' : 'Resume'"></span>
+                    </button>
+                    
+                    <button @click="requeueJob()" 
+                            x-show="job_status === 'FAILED' || job_status === 'NODE_FAIL'"
+                            class="w-full inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-700 bg-yellow-100 rounded-lg hover:bg-yellow-200 transition dark:bg-yellow-600 dark:text-white dark:hover:bg-yellow-700">
+                        <i class="fas fa-redo-alt mr-2"></i> Requeue
+                    </button>
+                    
+                </div>
+            </div>
+
+	 <h3 class="text-lg font-medium mb-3 dark:text-white">Job Status</h3>
+
+	 <div class="relative">
+	    
+	    <template x-for="(step, index) in workflowSteps" :key="step">
+		<div class="relative flex items-center" :class="{ 'pb-8': index < workflowSteps.length - 1 }">
+
+		    <div x-data="{ 
+			completed: isStepCompleted(step), 
+			isCurrent: isStepCurrent(step) 
+		    }">
+
+			<template x-if="index < workflowSteps.length - 1">
+			    <div 
+				class="absolute w-0.5" 
+				:class="{
+				    // Ligne bleue si l'étape est complétée OU est l'étape courante
+				    'bg-blue-500': completed || isCurrent, 
+				    // Gris si l'étape est future
+				    'bg-gray-300 dark:bg-gray-600': !completed && !isCurrent
+				}"
+				aria-hidden="true"
+				style="left: 7px; top: 50; height: 100%; transform: translateY(0);">
+			    </div>
+			</template>
+
+			<div 
+			    class="relative z-20 flex-shrink-0 w-4 h-4 rounded-full  border-2 flex items-center justify-center" 
+			    :class="{
+				// COMPLÉTÉ (Cercle plein bleu avec coche)
+				'bg-blue-500 border-blue-500 text-white': completed,
+				
+				// ACTUEL/RUNNING (Cercle bleu bordé avec point central)
+				'border-blue-500 bg-white dark:bg-gray-800': isCurrent && !completed,
+				
+				// FUTUR (Cercle vide, bordé gris)
+				'bg-white border-gray-400 dark:bg-gray-800 dark:border-gray-500': !completed && !isCurrent
+			    }"
+			>
+			    <template x-if="completed">
+				<svg class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+				    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+				</svg>
+			    </template>
+			    
+			    <template x-if="isCurrent && !completed">
+				<span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+			    </template>
+			</div>
+
+			<div class="ml-4 flex-1">
+			    <p class="font-semibold -mt-6 ml-4 text-gray-800 dark:text-gray-100" x-text="step"></p>
+
+			    <template x-if="status_history[step] && step !== 'Terminated'">
+				<time class="text-sm  ml-4 text-gray-500 dark:text-gray-400" x-text="status_history[step]"></time>
+			    </template>
+			    
+			    <template x-if="step === 'Terminated'">
+				<template x-if="status_history['End']">
+				    <time class="text-sm  ml-4 text-gray-500 dark:text-gray-400" x-text="status_history['End']"></time>
+				</template>
+				
+				<template x-if="status_history['End']">
+				    <p class="text-sm mt-1" :class="{'text-red-500': exit_code !== 0}" x-text="'Exit code: ' + exit_code"></p>
+				</template>
+			    </template>
+			    
+			    <template x-if="step === 'Running' && current_status === 'RUNNING'">
+				<p class="text-sm  ml-4 text-blue-600 dark:text-blue-400 mt-1">
+				    <span x-text="elapsed"></span> seconds elapsed
+				</p>
+			    </template>
+
+			    <template x-if="step === 'Scheduling'">
+				<template x-if="status_history['Start'] && status_history['Start'] !== '07/02/2106 06:28:14'">
+                                    <time class="text-sm  ml-4  text-gray-500 dark:text-gray-400" x-text="status_history['Start']"></time>
+                                </template>
+			    </template>
+
+			    <template x-if="step === 'Completing' && current_status === 'RUNNING'">
+    				<div x-data="{ estimatedTime: getEstimatedCompletion() }">
+				   <template x-if="estimatedTime && estimatedTime !== 'N/A' && estimatedTime !== 'Error'">
+
+					 <span class="flex items-center text-sm text-yellow-600 dark:text-yellow-400  ml-4 mt-1">
+					     <i class="fas fa-clock mr-1" aria-hidden="true"></i>
+					     <span x-text="estimatedTime"></span>
+					 </span>
+
+				  </template>
+				</div>
+			    </template>
+			</div>
+		    </div>
+		</div>
+	    </template>
+	 </div>
+	</div>
+	  
+	<div class="col-span-2 bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+            <h3 class="text-lg font-medium mb-4 dark:text-white">All job settings</h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-4 text-sm">
+	        {% from "jobs/_macros.html" import detail_item %}
+
+		<div class="space-y-4">
+		    {{ detail_item('User', job.user) }}
+		    {{ detail_item('Group', job.group) }}
+		    {{ detail_item('Priority', job.priority) }}
+		    {{ detail_item('Name', job.name) }}
+		    {{ detail_item('Exit Code', job.exit_code) }}
+		</div>
+
+		<div class="space-y-4">
+		    {{ detail_item('Working directory', job.working_dir) }}
+		    {{ detail_item('Nodes', job.nodes) }}
+		    {{ detail_item('Partition', job.partition) }}
+		    {{ detail_item('QOS', job.qos) }}
+		</div>
+		<!--
+		<div class="col-span-full pt-4 border-t dark:border-gray-700">
+                    <h4 class="font-medium mb-2 dark:text-white">Submit line</h4>
+                    <pre class="bg-gray-100 dark:bg-gray-900 p-3 rounded text-xs overflow-x-auto whitespace-pre-wrap" x-text="job.submit_line">{{ job.submit_line }}</pre>
+                </div>
+		-->
+                <div class="col-span-full">
+                    <h4 class="font-medium mb-2 dark:text-white">Input & Error files</h4>
+                    <pre class="bg-gray-100 dark:bg-gray-900 p-3 rounded text-xs overflow-x-auto whitespace-pre-wrap" >{{ job.output_path }}<br>{{ job.error_path }} </be></pre>
+                </div>
+
+                <div class="col-span-full pt-4 border-t dark:border-gray-700 flex space-x-8">
+                    <div>
+                        <h4 class="font-medium mb-2 dark:text-white">Requested</h4>
+                        <p x-html="job.requested_resources_html"></p>
+                    </div>
+                    <div>
+                        <h4 class="font-medium mb-2 dark:text-white">Allocated</h4>
+                        <p x-html="job.allocated_resources_html"></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+    </div>
+    
+    <div x-show="logsOpen" 
+         @keydown.escape.window="logsOpen = false" 
+         class="fixed inset-0 z-50 overflow-y-auto" 
+         style="display: none;">
+        
+        <div class="fixed inset-0 bg-gray-500 dark:bg-gray-900 opacity-75"></div>
+
+        <div class="min-h-screen flex items-center justify-center p-4">
+            <div class="relative bg-white dark:bg-gray-800 w-full max-w-4xl max-h-[90vh] rounded-lg shadow-xl overflow-hidden">
+                
+                <div class="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold dark:text-white">Output Logs for Job <span x-text="job.id"></span></h3>
+                    <button @click="closeLogsModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="p-4 overflow-y-auto h-[70vh]">
+                    <pre class="text-xs bg-gray-50 dark:bg-gray-900 p-3 rounded" x-html="logsContent">loading logs...</pre>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block page_scripts %}
+ <script id="job-data" type="application/json"> {{ job|tojson|safe }}</script>
+{% endblock %}

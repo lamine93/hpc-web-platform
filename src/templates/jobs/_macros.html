@@ -1,0 +1,6 @@
+{% macro detail_item(label, value) %}
+<div class="detail-item">
+    <dt class="detail-label">{{ label }}</dt>
+    <dd class="detail-value">{{ value if value else 'N/A' }}</dd>
+</div>
+{% endmacro %}

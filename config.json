@@ -1,0 +1,17 @@
+{
+  "port": 5000,
+  "SECRET_KEY": "03511df4b9a37765db707aedb92318b4c2014bd5834e9721f950d9e5042670da",
+  "LDAP_URI": "ldap://ldap:389",
+  "LDAP_BASE_DN": "dc=example,dc=org",
+  "LDAP_BIND_DN": "cn=admin,dc=example,dc=org",
+  "LDAP_BIND_PASSWORD": "admin",
+  "LDAP_USER_FILTER": "(uid={username})",
+  "LDAP_REQUIRE_GROUP_DN": "cn=hpc-users,ou=groups,dc=example,dc=org",
+  "LDAP_START_TLS": false,
+   "ENABLE_LOCAL_FALLBACK": true,
+  "LOCAL_ADMIN_USERNAME": "admin",
+  "LOCAL_ADMIN_PASSWORD_HASH": "pbkdf2:sha256:260000$0WgIqCIMNPK9j2hx$5621286c59d391b918ed0c973a8e052b38f4c2d0a4b33077028c9ace35d97051",
+   "SLURMRESTD_URL": "http://slurmrestd:6820",
+  "SLURMRESTD_API_VERSION": "v0.0.40"
+}
+
